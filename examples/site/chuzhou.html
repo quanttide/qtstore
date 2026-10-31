@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>量潮门店中心 · 滁州老城</title>
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+    background:#eef1f4; color:#1a1a1a; line-height:1.5;
+    padding:16px; min-height:100vh;
+  }
+  .wrap { max-width:560px; margin:0 auto; }
+
+  .top { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px; }
+  .top h1 { font-size:20px; font-weight:700; }
+  .top .sub { font-size:12px; color:#999; }
+
+  .scale-bar {
+    display:flex; align-items:center; gap:8px;
+    font-size:11px; color:#9aa7b0; margin-bottom:10px; padding:0 2px;
+  }
+  .scale-bar .line { width:80px; height:2px; background:#9aa7b0; position:relative; }
+  .scale-bar .line::before, .scale-bar .line::after {
+    content:""; position:absolute; top:-3px; width:2px; height:8px; background:#9aa7b0;
+  }
+  .scale-bar .line::before { left:0; }
+  .scale-bar .line::after { right:0; }
+
+  .map-box {
+    position:relative; background:#e7edf1;
+    border-radius:16px; overflow:hidden;
+    box-shadow:0 4px 18px rgba(0,0,0,.06);
+  }
+  .map-box svg { display:block; width:100%; height:auto; }
+
+  .zone-label { font-size:12px; fill:#8492a0; font-weight:500; user-select:none; pointer-events:none; }
+  .landmark { font-size:10px; fill:#a3b0b8; user-select:none; pointer-events:none; }
+
+  .dot { cursor:pointer; transition:r .15s, fill .15s; }
+  .dot:hover { r:9; }
+  .dot.active { fill:#ff5722; }
+  .dot-label { font-size:11px; fill:#222; font-weight:500; pointer-events:none; user-select:none; }
+
+  .panel {
+    margin-top:14px; background:#fff; border-radius:14px;
+    max-height:0; opacity:0; overflow:hidden;
+    transition:max-height .28s ease, opacity .28s ease, padding .28s ease;
+  }
+  .panel.open { max-height:420px; opacity:1; padding:18px 20px; }
+  .panel h2 { font-size:17px; font-weight:600; }
+  .panel .meta { font-size:12px; color:#888; margin:4px 0 12px; }
+  .panel .line { font-size:13px; padding:5px 0; display:flex; gap:8px; }
+  .panel .line .k { flex:0 0 48px; color:#999; }
+  .panel .go {
+    display:block; text-align:center; margin-top:14px;
+    background:#111; color:#fff; padding:12px; border-radius:10px;
+    text-decoration:none; font-size:14px;
+  }
+  .panel .close { float:right; font-size:13px; color:#bbb; cursor:pointer; }
+
+  .legend { display:flex; gap:14px; flex-wrap:wrap; font-size:11px; color:#888; margin-top:12px; padding:0 4px; }
+  .legend i { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:5px; vertical-align:middle; }
+
+  .foot { text-align:center; font-size:11px; color:#bbb; margin-top:18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <h1>量潮门店中心 · 滁州老城</h1>
+    <span class="sub">示意地图 · 约4km范围</span>
+  </div>
+
+  <div class="scale-bar">
+    <span>0</span><span class="line"></span><span>1 公里</span>
+  </div>
+
+  <div class="map-box">
+    <!-- 视口 800x800，代表约4km×4km -->
+    <svg viewBox="0 0 800 800" id="map">
+
+      <!-- 底图水系 -->
+      <rect x="0" y="0" width="800" height="800" fill="#eaf0f3"/>
+
+      <!-- 清流河（东侧弧带） -->
+      <path d="M680,60 Q720,300 690,520 Q670,660 710,760"
+            stroke="#c2d8e2" stroke-width="26" fill="none" opacity=".75"/>
+      <text class="landmark" x="712" y="400" transform="rotate(80 712 400)">清流河</text>
+
+      <!-- 琅琊山方向（左上远景） -->
+      <path d="M40,180 Q120,120 220,160 Q260,260 160,320 Q80,300 40,240 Z" fill="#dce9d8" opacity=".8"/>
+      <text class="landmark" x="70" y="230">← 琅琊山</text>
+
+      <!-- 南湖（中下） -->
+      <path d="M300,560 Q420,520 540,560 Q560,640 440,660 Q320,650 300,560 Z" fill="#bcd6e0"/>
+      <text class="zone-label" x="380" y="605">南湖公园</text>
+
+      <!-- 北湖（右上） -->
+      <path d="M470,210 Q560,180 630,220 Q640,270 560,290 Q490,280 470,210 Z" fill="#bcd6e0"/>
+      <text class="zone-label" x="500" y="240">北湖</text>
+
+      <!-- 内城河连接带 -->
+      <path d="M440,290 Q430,400 440,520" stroke="#cfe0e8" stroke-width="10" fill="none" opacity=".7"/>
+
+      <!-- 南谯路中轴 -->
+      <line x1="430" y1="120" x2="450" y2="720" stroke="#d8c7ab" stroke-width="7" stroke-linecap="round" opacity=".7"/>
+      <text class="landmark" x="462" y="180">南谯路</text>
+
+      <!-- 明光路横线 -->
+      <line x1="120" y1="430" x2="700" y2="430" stroke="#e0d6c4" stroke-width="5" opacity=".6"/>
+      <text class="landmark" x="140" y="422">明光路</text>
+
+      <!-- 片区标注 -->
+      <text class="zone-label" x="180" y="500">老城 · 南湖片区</text>
+      <text class="zone-label" x="520" y="160">遵阳街 · 老东关</text>
+      <text class="zone-label" x="180" y="300">中心商圈</text>
+
+      <!-- 地标 -->
+      <text class="landmark" x="350" y="540">悦达889（南湖北侧）</text>
+      <text class="landmark" x="300" y="250">白云商厦</text>
+
+      <!-- 门店点位注入 -->
+      <g id="dots"></g>
+    </svg>
+  </div>
+
+  <div class="legend">
+    <span><i style="background:#111"></i>已收录门店</span>
+    <span><i style="background:#bcd6e0"></i>水系</span>
+    <span><i style="background:#dce9d8"></i>琅琊山方向</span>
+    <span>点击圆点查看门店</span>
+  </div>
+
+  <div class="panel" id="panel">
+    <span class="close" onclick="closePanel()">收起 ✕</span>
+    <h2 id="p-name">—</h2>
+    <div class="meta" id="p-meta">—</div>
+    <div class="line"><span class="k">地址</span><span id="p-addr"></span></div>
+    <div class="line"><span class="k">营业</span><span id="p-hours"></span></div>
+    <div class="line"><span class="k">人均</span><span id="p-price"></span></div>
+    <a class="go" id="p-link" href="#">进入门店主页 →</a>
+  </div>
+
+  <div class="foot">由 量潮门店中心 提供 · store.liangchao.com</div>
+
+</div>
+
+<script>
+/* ----------------
+   坐标说明：
+   画布 800x800 ≈ 4km x 4km，即 1px ≈ 5米
+   中心参考点：
+     南湖中心  ~ (420, 600)
+     悦达889   ~ (390, 545)  南湖正北岸
+     北湖      ~ (550, 240)
+     白云商厦  ~ (360, 270)
+   加店时按“东南西北”目测放坐标即可
+------------------- */
+const stores = [
+  {
+    id: "sofa-coffee",
+    name: "SOFA COFFEE",
+    branch: "悦达889店",
+    category: "咖啡馆",
+    zone: "老城 · 南湖片区",
+    x: 392, y: 542,
+    address: "琅琊区育新东路158号 悦达889 9栋206-207",
+    hours: "10:30 – 次日01:00（待确认）",
+    price: "35–45 元",
+    url: "sofa-coffee.html"
+  }
+  // 新店示例：
+  // {
+  //   id: "laotie-hotpot",
+  //   name: "老铁火锅",
+  //   branch: "清流路店",
+  //   category: "火锅",
+  //   zone: "老城 · 东关",
+  //   x: 560, y: 360,
+  //   address: "南谯区清流路XX号",
+  //   hours: "11:00 – 22:00",
+  //   price: "60–80 元",
+  //   url: "laotie-hotpot.html"
+  // }
+];
+
+const dots = document.getElementById('dots');
+const panel = document.getElementById('panel');
+
+stores.forEach(s => {
+  const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  g.style.cursor = "pointer";
+
+  const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  c.setAttribute("cx", s.x);
+  c.setAttribute("cy", s.y);
+  c.setAttribute("r", 6);
+  c.setAttribute("fill", "#111");
+  c.setAttribute("class", "dot");
+  c.setAttribute("id", "dot-" + s.id);
+
+  const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  t.setAttribute("x", s.x + 10);
+  t.setAttribute("y", s.y + 4);
+  t.setAttribute("class", "dot-label");
+  t.textContent = s.name;
+
+  g.appendChild(c); g.appendChild(t);
+  g.addEventListener("click", () => openPanel(s));
+  dots.appendChild(g);
+});
+
+function openPanel(s) {
+  document.querySelectorAll(".dot").forEach(d => d.classList.remove("active"));
+  document.getElementById("dot-" + s.id).classList.add("active");
+  document.getElementById("p-name").textContent = s.name;
+  document.getElementById("p-meta").textContent = `${s.zone} · ${s.category}`;
+  document.getElementById("p-addr").textContent = s.address;
+  document.getElementById("p-hours").textContent = s.hours;
+  document.getElementById("p-price").textContent = s.price;
+  document.getElementById("p-link").href = s.url;
+  panel.classList.add("open");
+  panel.scrollIntoView({ behavior:"smooth", block:"nearest" });
+}
+
+function closePanel() {
+  panel.classList.remove("open");
+  document.querySelectorAll(".dot").forEach(d => d.classList.remove("active"));
+}
+
+document.getElementById("map").addEventListener("click", e => {
+  if (!e.target.closest("g")) closePanel();
+});
+</script>
+</body>
+</html>

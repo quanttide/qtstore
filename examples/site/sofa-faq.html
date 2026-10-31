@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SOFA COFFEE · 常见问题</title>
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+    background:#f5f7f8; color:#1a1a1a; line-height:1.55;
+    padding:16px; min-height:100vh;
+    display:flex; justify-content:center;
+  }
+  .wrap { max-width:520px; width:100%; }
+
+  /* 头部 */
+  .head { margin-bottom:18px; }
+  .head h1 { font-size:20px; font-weight:700; }
+  .head .sub { font-size:13px; color:#888; margin-top:5px; }
+
+  .hint {
+    font-size:13px; color:#5a6b63; background:#e9f2ec;
+    border-radius:10px; padding:10px 14px; margin-bottom:20px;
+  }
+
+  /* 分组 */
+  .group { margin-bottom:24px; }
+  .group-title {
+    font-size:12px; font-weight:600; letter-spacing:.6px;
+    text-transform:uppercase; color:#aaa; margin-bottom:8px; padding-left:2px;
+  }
+
+  /* 问答条目 */
+  .qa {
+    background:#fff; border-radius:12px; margin-bottom:8px;
+    overflow:hidden; box-shadow:0 1px 6px rgba(0,0,0,.04);
+  }
+  .q {
+    padding:14px 16px; font-size:14px; font-weight:500;
+    display:flex; align-items:flex-start; gap:8px;
+    cursor:pointer;
+  }
+  .q .qmark {
+    flex:0 0 18px; height:18px; line-height:18px; text-align:center;
+    background:#111; color:#fff; border-radius:50%; font-size:11px; margin-top:2px;
+  }
+  .q .arrow {
+    margin-left:auto; color:#bbb; font-size:12px; transition:transform .2s;
+  }
+  .qa.open .q .arrow { transform:rotate(90deg); }
+
+  .a {
+    max-height:0; overflow:hidden; transition:max-height .25s ease;
+    font-size:13.5px; color:#444; padding:0 16px;
+    border-top:1px solid transparent;
+  }
+  .qa.open .a { max-height:220px; padding:0 16px 14px; border-top-color:#f0f0f0; margin-top:-2px; }
+  .a .body { padding-top:10px; }
+  .a .meta { color:#999; font-size:12px; margin-top:6px; }
+
+  /* 未确认 */
+  .pending { color:#bbb; font-style:italic; }
+
+  /* 没找到 */
+  .notfound {
+    background:#fff; border-radius:12px; padding:16px;
+    font-size:13px; color:#777; text-align:center;
+  }
+  .notfound a { color:#1a73e8; text-decoration:none; }
+
+  .foot { text-align:center; font-size:11px; color:#bbb; margin-top:24px; }
+  .foot a { color:#999; text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="head">
+    <h1>SOFA COFFEE · 常见问题</h1>
+    <div class="sub">客人常问的，这里都有答案 · 信息如有变动以店内为准</div>
+  </div>
+
+  <div class="hint">
+    找不到答案？直接打电话问老板 👉 <a href="tel:13855005031" style="color:#2c7a4d;font-weight:500;">13855005031</a>
+    （电话待核实，请到店确认）
+  </div>
+
+  <div id="list"></div>
+
+  <div class="foot">
+    由 量潮门店中心 提供 · store.liangchao.com
+  </div>
+
+</div>
+
+<script>
+/* ---------- 问答数据 ----------
+   答案支持三种状态：
+     string  → 确定答案
+     null    → 待确认（灰显）
+     { yes:true, text:"有，详情" } → 带绿色“有”标签
+     { yes:false, text:"不提供" }   → 带红色“无”标签
+------------------------------- */
+const faqs = [
+  {
+    group: "到店与营业",
+    items: [
+      { q: "几点开门？打烊到几点？", a: "10:30 开门，次日 01:00 打烊。（营业时间待核实）" },
+      { q: "在哪里？好找吗？", a: "琅琊区育新东路158号，悦达889 9栋206-207，南湖公园北侧、老1912附近。" },
+      { q: "有停车位吗？", a: null },
+      { q: "坐公交怎么过去？", a: null },
+      { q: "能开发票吗？", a: { yes: false, text: "暂不支持开票，具体以店内为准。" } }
+    ]
+  },
+  {
+    group: "空间与座位",
+    items: [
+      { q: "有包间吗？", a: { yes: false, text: "暂无独立包间，以开放卡座和堂食区为主。" } },
+      { q: "能坐多少人？适合几个人来？", a: "以2–4人卡座为主，也适合一个人久坐办公；大桌情况待确认。" },
+      { q: "有户外座位吗？", a: { yes: true, text: "店外有休闲区域，天气好时开放。" } },
+      { q: "带小孩方便吗？有宝宝椅吗？", a: null },
+      { q: "环境吵吗？能办公/谈事吗？", a: "空间偏安静，有插座位，适合久坐和轻办公；高峰时段会热闹一些。" }
+    ]
+  },
+  {
+    group: "点单与消费",
+    items: [
+      { q: "人均大概多少钱？", a: "约 35–45 元。" },
+      { q: "你们招牌是什么？必点推荐？", a: "以咖啡为主打，具体当日推荐见店内菜单板。（菜单待补充）" },
+      { q: "有蛋糕或甜品吗？", a: { yes: true, text: "有，每日款式以店内供应为准。" } },
+      { q: "有最低消费吗？", a: { yes: false, text: "无最低消费，坐多久都可以。" } },
+      { q: "能自带食物或酒水吗？", a: null }
+    ]
+  },
+  {
+    group: "预订与规则",
+    items: [
+      { q: "需要提前订位吗？", a: "平时不用，直接来坐；周末高峰或大桌建议电话确认。" },
+      { q: "怎么订位？", a: "目前电话预订最稳妥，电话待核实。" },
+      { q: "订位要交押金吗？", a: { yes: false, text: "不收押金。" } },
+      { q: "临时去不了，要取消吗？", a: "提前打个电话说一声就行，不设扣费。" },
+      { q: "能带宠物吗？", a: null }
+    ]
+  }
+];
+
+/* ---------- 渲染 ---------- */
+const list = document.getElementById('list');
+
+faqs.forEach(group => {
+  const g = document.createElement('div');
+  g.className = 'group';
+
+  const title = document.createElement('div');
+  title.className = 'group-title';
+  title.textContent = group.group;
+  g.appendChild(title);
+
+  group.items.forEach(item => {
+    const qa = document.createElement('div');
+    qa.className = 'qa';
+
+    const q = document.createElement('div');
+    q.className = 'q';
+    q.innerHTML = `<span class="qmark">Q</span><span>${item.q}</span><span class="arrow">›</span>`;
+
+    const a = document.createElement('div');
+    a.className = 'a';
+
+    let html = '<div class="body">';
+    const ans = item.a;
+    if (ans === null) {
+      html += '<span class="pending">这条店家还没确认，建议电话问一下 ☝️</span>';
+    } else if (typeof ans === 'object') {
+      const tag = ans.yes
+        ? '<span style="display:inline-block;background:#e8f5e9;color:#2e7d32;font-size:11px;padding:1px 7px;border-radius:4px;margin-right:6px;">有</span>'
+        : '<span style="display:inline-block;background:#fce4ec;color:#c62828;font-size:11px;padding:1px 7px;border-radius:4px;margin-right:6px;">无</span>';
+      html += tag + ans.text;
+    } else {
+      html += ans;
+    }
+    html += '</div>';
+    a.innerHTML = html;
+
+    q.addEventListener('click', () => {
+      const isOpen = qa.classList.contains('open');
+      document.querySelectorAll('.qa.open').forEach(x => x.classList.remove('open'));
+      if (!isOpen) qa.classList.add('open');
+    });
+
+    qa.appendChild(q);
+    qa.appendChild(a);
+    g.appendChild(qa);
+  });
+
+  list.appendChild(g);
+});
+</script>
+
+</body>
+</html>
