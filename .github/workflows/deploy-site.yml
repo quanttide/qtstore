@@ -1,38 +1,72 @@
+# 发布 site：推送 site/* tag（如 site/v0.1.0，由 qtcloud-devops release publish 创建）时，
+# 构建站点（build.py 生成门店页），上传到 OSS 发布桶（qtstore-site，IaC 见 manifests/terraform/site.tf），
+# 并刷新 CDN 缓存。
+#
+# 对齐 qtclass deploy-studio.yml / qtcloud-media 部署模式：
+#   site/* tag → Actions（python build.py，ossutil cp）→ OSS 桶（qtstore-site，静态网站托管，私有）
+#   → CDN（store.quanttide.com，私有回源鉴权 + 泛域名证书）→ 用户浏览器
+#
+# 触发说明：用 tag 精确匹配 site/ 前缀，避免其他 tag 误触发。
+#
+# 所需 GitHub secrets（org / repo 级）：
+#   - ALIYUN_ACCESS_KEY_ID / ALIYUN_ACCESS_KEY_SECRET（secret）：RAM 用户 AccessKey（OSS 上传 + CDN 刷新）
+
 name: Deploy Site
 
-# 部署类工作流只随主分支提交触发，不手动触发。
 on:
   push:
-    branches: [main]
-    paths:
-      - 'src/site/**'
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+    tags:
+      - 'site/**'
 
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: deploy-site
+  cancel-in-progress: true
+
+env:
+  OSS_BUCKET: qtstore-site
+  OSS_ENDPOINT: oss-cn-hangzhou.aliyuncs.com
+  CDN_DOMAIN: store.quanttide.com
 
 jobs:
-  deploy:
+  build-and-deploy:
+    name: Build Site & Deploy to OSS
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Build store pages
         run: python3 src/site/build.py
 
-      - uses: actions/configure-pages@v5
-
-      - uses: actions/upload-pages-artifact@v3
+      - name: Setup ossutil
+        uses: manyuanrong/setup-ossutil@v3.0
         with:
-          path: src/site
+          endpoint: ${{ env.OSS_ENDPOINT }}
+          access-key-id: ${{ secrets.ALIYUN_ACCESS_KEY_ID }}
+          access-key-secret: ${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}
 
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      # 缓存策略：门店页/数据会变，全部 no-cache，避免发版后 CDN 拿旧页
+      - name: Upload site to OSS
+        run: |
+          ossutil cp src/site/index.html oss://${{ env.OSS_BUCKET }}/index.html -f --meta "Cache-Control:no-cache"
+          ossutil cp src/site/map.html oss://${{ env.OSS_BUCKET }}/map.html -f --meta "Cache-Control:no-cache"
+          ossutil cp src/site/404.html oss://${{ env.OSS_BUCKET }}/404.html -f --meta "Cache-Control:no-cache"
+          ossutil cp src/site/data/ oss://${{ env.OSS_BUCKET }}/data/ -r -f --meta "Cache-Control:no-cache"
+          ossutil cp src/site/stores/ oss://${{ env.OSS_BUCKET }}/stores/ -r -f --meta "Cache-Control:no-cache"
+
+      - name: Refresh CDN
+        run: |
+          pip install aliyun-python-sdk-cdn
+          python -c "
+          from aliyunsdkcore.client import AcsClient
+          from aliyunsdkcdn.request.v20180510.RefreshObjectCachesRequest import RefreshObjectCachesRequest
+          import os
+          cli = AcsClient(os.environ['ALIYUN_ACCESS_KEY_ID'], os.environ['ALIYUN_ACCESS_KEY_SECRET'], 'cn-hangzhou')
+          req = RefreshObjectCachesRequest()
+          req.set_ObjectPath('https://${{ env.CDN_DOMAIN }}/')
+          req.set_ObjectType('Directory')
+          cli.do_action_with_exception(req)
+          "
+        env:
+          ALIYUN_ACCESS_KEY_ID: ${{ secrets.ALIYUN_ACCESS_KEY_ID }}
+          ALIYUN_ACCESS_KEY_SECRET: ${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}

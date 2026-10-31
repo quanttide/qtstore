@@ -20,4 +20,4 @@ src/site/
 
 1. 按 `data/schema.md` 在 `data/stores.json` 末尾追加对象（没核实的字段不写，留"待确认"）。
 2. 运行 `python3 build.py`，本地打开 `map.html` 和 `stores/{id}.html` 检查。
-3. 提交推送，部署工作流自动重建。
+3. 提交并推送 `site/vX.Y.Z` tag（qtcloud-devops release publish），流水线自动构建上传并刷新 CDN。

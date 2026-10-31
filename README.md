@@ -10,13 +10,15 @@
 
 ```
 qtstore/
-├── src/site/          # 站点源码（首页、地图、门店数据与生成脚本，见其 README）
-└── .github/workflows/ # 部署工作流（main 推送触发，构建后发 GitHub Pages）
+├── src/site/              # 站点源码（首页、地图、门店数据与生成脚本，见其 README）
+├── manifests/terraform/   # 部署基础设施（OSS 桶 + CDN，见其 README）
+├── scripts/               # CDN 证书绑定等运维脚本
+└── .github/workflows/     # 部署流水线（site/* tag 触发，构建后发 OSS + CDN）
 ```
 
 ## 加一家新店
 
-改 `src/site/data/stores.json`，推送即可，流程见 `src/site/README.md`。
+改 `src/site/data/stores.json`，发 `site/*` tag 走流水线，流程见 `src/site/README.md`。
 
 ## 许可
 

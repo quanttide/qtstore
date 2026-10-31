@@ -8,6 +8,12 @@
 
 ---
 
+## [Unreleased]
+
+### 变更
+
+- 部署链路由 GitHub Pages 改为阿里云 OSS + CDN（对齐 qtcloud-media 模式）：`manifests/terraform/`（qtstore-site 桶 + store.quanttide.com CDN 私有回源）、`scripts/configure-store-cdn.sh`（泛域名证书绑定）、部署流水线改 site/* tag 触发
+
 ## [0.1.0] - 2026-10-31
 
 首个站点版本，部署至 store.quanttide.com。
