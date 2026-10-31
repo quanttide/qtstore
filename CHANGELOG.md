@@ -8,6 +8,22 @@
 
 ---
 
+## [site-0.1.0] - 2026-10-31
+
+首个站点版本，部署至 store.quanttide.com。
+
+### 新增
+
+- `src/site/` 正式站点：首页、滁州老城示意地图、门店页生成脚本
+- 门店数据单一事实源 `src/site/data/stores.json` 与字段规范 `schema.md`（三态布尔，宁可空着不编）
+- 门店页 / FAQ 页模板，`build.py` 按数据生成 `stores/`，必填字段与 id 唯一性检查
+- 部署工作流：main 推送触发构建并发 GitHub Pages（CNAME: store.quanttide.com）
+- 首店 SOFA COFFEE 悦达889店：信息卡 + 常见问题；未核实字段（营业时间、电话、停车、容量）按约定留空显示「待确认」
+
+### 移除
+
+- `examples/site/` 四页原型，已收敛进 `src/site/`
+
 ## [Unreleased]
 
 ### 新增

@@ -64,6 +64,7 @@
   .legend i { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:5px; vertical-align:middle; }
 
   .foot { text-align:center; font-size:11px; color:#bbb; margin-top:18px; }
+  .foot a { color:#999; text-decoration:none; }
 </style>
 </head>
 <body>
@@ -144,74 +145,15 @@
     <a class="go" id="p-link" href="#">进入门店主页 →</a>
   </div>
 
-  <div class="foot">由 量潮门店中心 提供 · store.liangchao.com</div>
+  <div class="foot">由 <a href="index.html">量潮门店中心</a> 提供 · store.quanttide.com</div>
 
 </div>
 
 <script>
-/* ----------------
-   坐标说明：
-   画布 800x800 ≈ 4km x 4km，即 1px ≈ 5米
-   中心参考点：
-     南湖中心  ~ (420, 600)
-     悦达889   ~ (390, 545)  南湖正北岸
-     北湖      ~ (550, 240)
-     白云商厦  ~ (360, 270)
-   加店时按“东南西北”目测放坐标即可
-------------------- */
-const stores = [
-  {
-    id: "sofa-coffee",
-    name: "SOFA COFFEE",
-    branch: "悦达889店",
-    category: "咖啡馆",
-    zone: "老城 · 南湖片区",
-    x: 392, y: 542,
-    address: "琅琊区育新东路158号 悦达889 9栋206-207",
-    hours: "10:30 – 次日01:00（待确认）",
-    price: "35–45 元",
-    url: "sofa-coffee.html"
-  }
-  // 新店示例：
-  // {
-  //   id: "laotie-hotpot",
-  //   name: "老铁火锅",
-  //   branch: "清流路店",
-  //   category: "火锅",
-  //   zone: "老城 · 东关",
-  //   x: 560, y: 360,
-  //   address: "南谯区清流路XX号",
-  //   hours: "11:00 – 22:00",
-  //   price: "60–80 元",
-  //   url: "laotie-hotpot.html"
-  // }
-];
-
+/* 门店数据来自 data/stores.json（唯一事实源），此页只负责渲染。
+   坐标画布 800x800 ≈ 4km x 4km，参考点见 data/schema.md。 */
 const dots = document.getElementById('dots');
 const panel = document.getElementById('panel');
-
-stores.forEach(s => {
-  const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-  g.style.cursor = "pointer";
-
-  const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-  c.setAttribute("cx", s.x);
-  c.setAttribute("cy", s.y);
-  c.setAttribute("r", 6);
-  c.setAttribute("fill", "#111");
-  c.setAttribute("class", "dot");
-  c.setAttribute("id", "dot-" + s.id);
-
-  const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
-  t.setAttribute("x", s.x + 10);
-  t.setAttribute("y", s.y + 4);
-  t.setAttribute("class", "dot-label");
-  t.textContent = s.name;
-
-  g.appendChild(c); g.appendChild(t);
-  g.addEventListener("click", () => openPanel(s));
-  dots.appendChild(g);
-});
 
 function openPanel(s) {
   document.querySelectorAll(".dot").forEach(d => d.classList.remove("active"));
@@ -219,9 +161,9 @@ function openPanel(s) {
   document.getElementById("p-name").textContent = s.name;
   document.getElementById("p-meta").textContent = `${s.zone} · ${s.category}`;
   document.getElementById("p-addr").textContent = s.address;
-  document.getElementById("p-hours").textContent = s.hours;
-  document.getElementById("p-price").textContent = s.price;
-  document.getElementById("p-link").href = s.url;
+  document.getElementById("p-hours").textContent = s.hours || "待确认";
+  document.getElementById("p-price").textContent = s.priceRange || "待确认";
+  document.getElementById("p-link").href = `stores/${s.id}.html`;
   panel.classList.add("open");
   panel.scrollIntoView({ behavior:"smooth", block:"nearest" });
 }
@@ -231,9 +173,37 @@ function closePanel() {
   document.querySelectorAll(".dot").forEach(d => d.classList.remove("active"));
 }
 
+fetch('data/stores.json')
+  .then(r => r.json())
+  .then(stores => {
+    stores.forEach(s => {
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      g.style.cursor = "pointer";
+
+      const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      c.setAttribute("cx", s.x);
+      c.setAttribute("cy", s.y);
+      c.setAttribute("r", 6);
+      c.setAttribute("fill", "#111");
+      c.setAttribute("class", "dot");
+      c.setAttribute("id", "dot-" + s.id);
+
+      const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      t.setAttribute("x", s.x + 10);
+      t.setAttribute("y", s.y + 4);
+      t.setAttribute("class", "dot-label");
+      t.textContent = s.name;
+
+      g.appendChild(c); g.appendChild(t);
+      g.addEventListener("click", () => openPanel(s));
+      dots.appendChild(g);
+    });
+  });
+
 document.getElementById("map").addEventListener("click", e => {
   if (!e.target.closest("g")) closePanel();
 });
 </script>
+
 </body>
 </html>

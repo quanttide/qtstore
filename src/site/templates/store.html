@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>量潮门店中心 · 门店信息卡</title>
+<title>{{name}} · 量潮门店中心</title>
 <style>
   /* 全局重置 */
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -99,10 +99,6 @@
     background: #fce4ec;
     color: #c62828;
   }
-  .info-row .value .tag.maybe {
-    background: #fff3e0;
-    color: #e65100;
-  }
   .info-row .value .pending {
     color: #bbb;
     font-style: italic;
@@ -182,36 +178,9 @@
 </head>
 <body>
 
-<!-- 门店数据（修改这里即可生成新门店页面） -->
+<!-- 门店数据（由 build.py 从 data/stores.json 注入，勿手改） -->
 <script id="store-data" type="application/json">
-{
-  "name": "SOFA COFFEE",
-  "branch": "悦达889店",
-  "city": "滁州",
-  "category": "咖啡馆",
-  "address": "琅琊区育新东路158号 悦达889 9栋206-207（环城路19号，近南湖/老1912）",
-  "hours": "10:30 – 次日01:00",
-  "phone": "13855005031",
-  "parking": "悦达889街区停车场（待核实具体入口）",
-  "transit": "解放小学 / 南大院站步行约5分钟",
-  "seatingIndoor": "有卡座、堂食区，含一架钢琴",
-  "seatingOutdoor": "有店外休闲区域",
-  "capacityNote": "可容纳约40-50人（估算）",
-  "privateRoom": false,
-  "bestFor": ["单人久坐", "双人约会", "朋友小聚", "轻办公"],
-  "priceRange": "35–45 元",
-  "menuTags": ["咖啡", "非咖啡饮品", "甜品"],
-  "stayPolicy": "可长时间久坐，不赶人",
-  "invoice": false,
-  "bookingRequired": false,
-  "deposit": false,
-  "minSpend": false,
-  "petAllowed": false,
-  "powerOutlet": true,
-  "wifi": true,
-  "smoking": false,
-  "notes": "小桌通常无需预订；大桌/活动建议电话沟通"
-}
+{{STORE_JSON}}
 </script>
 
 <!-- 页面主体 -->
@@ -232,17 +201,17 @@
 
   // ---------- 工具函数 ----------
   function tag(text, type) {
-    // type: 'yes' | 'no' | 'maybe'
-    const cls = type === 'yes' ? 'tag' : (type === 'no' ? 'tag no' : 'tag maybe');
+    const cls = type === 'yes' ? 'tag' : 'tag no';
     return `<span class="${cls}">${text}</span>`;
   }
-
-  function boolTag(val, yesText='有', noText='无') {
+  function boolTag(val, yesText, noText) {
     if (val === true) return tag(yesText, 'yes');
     if (val === false) return tag(noText, 'no');
-    return `<span class="pending">待确认</span>`;
+    return '<span class="pending">待确认</span>';
   }
-
+  function text(val) {
+    return val || '<span class="pending">待确认</span>';
+  }
   function listTags(arr) {
     if (!arr || arr.length === 0) return '<span class="pending">暂无信息</span>';
     return arr.map(item => `<span class="tag">${item}</span>`).join(' ');
@@ -256,7 +225,7 @@
     <div class="header">
       <h1>${data.name}</h1>
       <div class="meta">
-        <span>${data.city} · ${data.branch || ''}</span>
+        <span>${data.city}${data.branch ? ' · ' + data.branch : ''}</span>
         <span>${data.category}</span>
       </div>
     </div>
@@ -267,10 +236,10 @@
     <div class="section">
       <div class="section-title">到店信息</div>
       <div class="info-row"><div class="label">地址</div><div class="value">${data.address}</div></div>
-      <div class="info-row"><div class="label">营业时间</div><div class="value">${data.hours}</div></div>
-      <div class="info-row"><div class="label">电话</div><div class="value"><a href="tel:${data.phone}" style="color:#1a73e8;text-decoration:none;">${data.phone}</a></div></div>
-      <div class="info-row"><div class="label">停车</div><div class="value">${data.parking || '<span class="pending">待确认</span>'}</div></div>
-      <div class="info-row"><div class="label">公交</div><div class="value">${data.transit || '<span class="pending">待确认</span>'}</div></div>
+      <div class="info-row"><div class="label">营业时间</div><div class="value">${text(data.hours)}</div></div>
+      <div class="info-row"><div class="label">电话</div><div class="value">${data.phone ? `<a href="tel:${data.phone}" style="color:#1a73e8;text-decoration:none;">${data.phone}</a>` : '<span class="pending">待确认</span>'}</div></div>
+      <div class="info-row"><div class="label">停车</div><div class="value">${text(data.parking)}</div></div>
+      <div class="info-row"><div class="label">公交</div><div class="value">${text(data.transit)}</div></div>
     </div>
   `;
 
@@ -278,9 +247,9 @@
   const spaceHTML = `
     <div class="section">
       <div class="section-title">空间与座位</div>
-      <div class="info-row"><div class="label">店内</div><div class="value">${data.seatingIndoor || '<span class="pending">待确认</span>'}</div></div>
-      <div class="info-row"><div class="label">户外</div><div class="value">${data.seatingOutdoor || '<span class="pending">待确认</span>'}</div></div>
-      <div class="info-row"><div class="label">容量</div><div class="value">${data.capacityNote || '<span class="pending">待确认</span>'}</div></div>
+      <div class="info-row"><div class="label">店内</div><div class="value">${text(data.seatingIndoor)}</div></div>
+      <div class="info-row"><div class="label">户外</div><div class="value">${text(data.seatingOutdoor)}</div></div>
+      <div class="info-row"><div class="label">容量</div><div class="value">${text(data.capacityNote)}</div></div>
       <div class="info-row"><div class="label">包间</div><div class="value">${boolTag(data.privateRoom, '有', '无')}</div></div>
       <div class="info-row"><div class="label">适合场景</div><div class="value">${listTags(data.bestFor)}</div></div>
     </div>
@@ -290,9 +259,9 @@
   const priceHTML = `
     <div class="section">
       <div class="section-title">消费信息</div>
-      <div class="info-row"><div class="label">人均</div><div class="value">${data.priceRange || '<span class="pending">待确认</span>'}</div></div>
+      <div class="info-row"><div class="label">人均</div><div class="value">${text(data.priceRange)}</div></div>
       <div class="info-row"><div class="label">品类</div><div class="value">${listTags(data.menuTags)}</div></div>
-      <div class="info-row"><div class="label">停留</div><div class="value">${data.stayPolicy || '<span class="pending">待确认</span>'}</div></div>
+      <div class="info-row"><div class="label">停留</div><div class="value">${text(data.stayPolicy)}</div></div>
       <div class="info-row"><div class="label">发票</div><div class="value">${boolTag(data.invoice, '可开具', '暂不支持')}</div></div>
     </div>
   `;
@@ -301,7 +270,7 @@
   const ruleHTML = `
     <div class="section">
       <div class="section-title">规则与设施</div>
-      <div class="info-row"><div class="label">预订</div><div class="value">${data.bookingRequired ? '建议提前预订' : '通常无需预订'}</div></div>
+      <div class="info-row"><div class="label">预订</div><div class="value">${data.bookingRequired === undefined ? '<span class="pending">待确认</span>' : (data.bookingRequired ? '建议提前预订' : '通常无需预订')}</div></div>
       <div class="info-row"><div class="label">低消</div><div class="value">${boolTag(data.minSpend, '有', '无')}</div></div>
       <div class="info-row"><div class="label">押金</div><div class="value">${boolTag(data.deposit, '有', '无')}</div></div>
       <div class="info-row"><div class="label">宠物</div><div class="value">${boolTag(data.petAllowed, '可带入', '不可带入')}</div></div>
@@ -313,46 +282,43 @@
   `;
 
   // 按钮
-  const actionsHTML = `
-    <div class="actions">
-      <a class="btn btn-primary" href="tel:${data.phone}">📞 电话咨询 / 订位</a>
-      <button class="btn btn-secondary" id="copyAddrBtn">📍 复制地址</button>
-    </div>
-  `;
+  let actionsHTML = '<div class="actions">';
+  if (data.phone) actionsHTML += `<a class="btn btn-primary" href="tel:${data.phone}">📞 电话咨询 / 订位</a>`;
+  if (data.faq) actionsHTML += `<a class="btn ${data.phone ? 'btn-secondary' : 'btn-primary'}" href="{{faq_href}}">💬 常见问题</a>`;
+  actionsHTML += `<button class="btn btn-secondary" id="copyAddrBtn">📍 复制地址</button>`;
+  actionsHTML += '</div>';
 
   // 页脚
   const footerHTML = `
     <div class="footer">
-      由 <a href="#">量潮门店中心</a> 提供 · store.liangchao.com
-      <div class="update-time">信息更新于 2026-10</div>
+      由 <a href="../index.html">量潮门店中心</a> 提供 · store.quanttide.com
+      <div class="update-time">信息更新于 {{UPDATED}}</div>
     </div>
   `;
 
   app.innerHTML = headerHTML + arrivalHTML + spaceHTML + priceHTML + ruleHTML + actionsHTML + footerHTML;
 
-  // ---------- 复制地址功能 ----------
+  // ---------- 复制地址 ----------
   const copyBtn = document.getElementById('copyAddrBtn');
   const toast = document.getElementById('toast');
-  if (copyBtn && toast) {
-    copyBtn.addEventListener('click', function() {
-      navigator.clipboard.writeText(data.address).then(() => {
-        toast.textContent = '地址已复制';
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 2000);
-      }).catch(() => {
-        // 降级方案
-        const textarea = document.createElement('textarea');
-        textarea.value = data.address;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        toast.textContent = '地址已复制';
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 2000);
-      });
-    });
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
   }
+  copyBtn.addEventListener('click', function() {
+    navigator.clipboard.writeText(data.address).then(() => {
+      showToast('地址已复制');
+    }).catch(() => {
+      const textarea = document.createElement('textarea');
+      textarea.value = data.address;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      showToast('地址已复制');
+    });
+  });
 })();
 </script>
 

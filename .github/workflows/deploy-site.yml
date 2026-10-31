@@ -1,0 +1,38 @@
+name: Deploy Site
+
+# 部署类工作流只随主分支提交触发，不手动触发。
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/site/**'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build store pages
+        run: python3 src/site/build.py
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: src/site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

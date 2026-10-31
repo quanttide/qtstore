@@ -4,15 +4,19 @@
 
 ## 概述
 
-对外呈现门店中心：顾客从这里进入，查看城市门店点位与单店信息卡。当前页面原型见 `examples/site/`（首页、滁州老城门店地图、门店信息卡、SOFA COFFEE 常见问题）。
+对外呈现门店中心：顾客从这里进入，查看城市门店点位与单店信息卡。线上地址 [store.quanttide.com](https://store.quanttide.com)。
 
 ## 目录结构
 
 ```
 qtstore/
-├── src/site/          # 站点源码
-└── examples/site/     # 页面原型
+├── src/site/          # 站点源码（首页、地图、门店数据与生成脚本，见其 README）
+└── .github/workflows/ # 部署工作流（main 推送触发，构建后发 GitHub Pages）
 ```
+
+## 加一家新店
+
+改 `src/site/data/stores.json`，推送即可，流程见 `src/site/README.md`。
 
 ## 许可
 
